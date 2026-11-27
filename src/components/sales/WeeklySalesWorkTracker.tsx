@@ -172,64 +172,15 @@ export function WeeklySalesWorkTracker({
   return (
     <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300 print:p-0">
       
-      {/* 1. TOP HEADER & FILTER TOOLBAR */}
+      {/* 1. TOP HEADER */}
       <PageHeader
-        eyebrow="Sales Force Oversight & Weekly Field Tracking"
+        eyebrow={isAdmin ? 'Sales Force Oversight & Weekly Field Tracking' : `Personal Field Activity • ${currentUser?.name || 'Sales Rep'}`}
         badgeText={selectedBrand === 'Global View' ? 'Consolidated Brands' : `${selectedBrand} Weekly Log`}
-        badgeVariant={isAdmin ? 'neutral' : 'brand'}
+        badgeVariant="brand"
         title="Weekly Sales Work & Customer Follow-Up Log"
         description="Standardized 12-point customer visit tracking replacing manual weekly Word files. Monitor visits, customer requests, sample tests, and pipeline commitments."
         actions={
-          <div className="flex flex-wrap items-center gap-2.5 text-xs print:hidden">
-            {/* Week Selector */}
-            <div className="flex items-center gap-1.5 bg-bg-card border border-border-strong/70 rounded-lg px-2.5 py-1.5 shadow-2xs">
-              <Calendar className="w-3.5 h-3.5 text-text-muted" />
-              <span className="text-text-muted text-[11px] font-medium">Week:</span>
-              <select
-                value={selectedWeek}
-                onChange={(e) => setSelectedWeek(Number(e.target.value))}
-                className="bg-transparent text-xs text-text-primary font-semibold focus:outline-none cursor-pointer"
-              >
-                <option value={48}>Week 48 (23-29 Nov 2026) • Current</option>
-                <option value={47}>Week 47 (16-22 Nov 2026)</option>
-                <option value={0}>All Recorded Weeks</option>
-              </select>
-            </div>
-
-            {/* Brand Filter */}
-            <div className="flex items-center gap-1.5 bg-bg-card border border-border-strong/70 rounded-lg px-2.5 py-1.5 shadow-2xs">
-              <span className="text-text-muted text-[11px] font-medium">Brand:</span>
-              <select
-                value={selectedBrand}
-                onChange={(e) => setSelectedBrand(e.target.value)}
-                className="bg-transparent text-xs text-text-primary font-semibold focus:outline-none cursor-pointer"
-              >
-                <option value="Global View">All Brands (Consolidated)</option>
-                <option value="Explast">Explast (Plastics)</option>
-                <option value="PrintBox">PrintBox (Paper)</option>
-              </select>
-            </div>
-
-            {/* Sales Rep Filter (Admin only) */}
-            {isAdmin && (
-              <div className="flex items-center gap-1.5 bg-bg-card border border-border-strong/70 rounded-lg px-2.5 py-1.5 shadow-2xs">
-                <User className="w-3.5 h-3.5 text-text-muted" />
-                <span className="text-text-muted text-[11px] font-medium">Rep:</span>
-                <select
-                  value={selectedRep}
-                  onChange={(e) => setSelectedRep(e.target.value)}
-                  className="bg-transparent text-xs text-text-primary font-semibold focus:outline-none cursor-pointer"
-                >
-                  <option value="all">All 4 Representatives</option>
-                  {salesReps.map((r) => (
-                    <option key={r.id} value={r.name}>
-                      {r.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
+          <div className="flex items-center gap-2.5 print:hidden shrink-0">
             {/* Print / Export Button */}
             <Button
               variant="outline"
@@ -252,6 +203,69 @@ export function WeeklySalesWorkTracker({
           </div>
         }
       />
+
+      {/* 2. DEDICATED HORIZONTAL SCOPE & FILTER TOOLBAR */}
+      <div className="bg-bg-card border border-border-strong/70 rounded-xl p-3 sm:p-3.5 shadow-2xs flex flex-wrap items-center justify-between gap-3 text-xs print:hidden">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Week Selector */}
+          <div className="flex items-center gap-1.5 bg-bg-secondary/70 border border-border-subtle rounded-lg px-2.5 py-1.5">
+            <Calendar className="w-3.5 h-3.5 text-text-muted" />
+            <span className="text-text-muted text-[11px] font-medium">Week:</span>
+            <select
+              value={selectedWeek}
+              onChange={(e) => setSelectedWeek(Number(e.target.value))}
+              className="bg-transparent text-xs text-text-primary font-semibold focus:outline-none cursor-pointer"
+            >
+              <option value={48}>Week 48 (23-29 Nov 2026) • Current</option>
+              <option value={47}>Week 47 (16-22 Nov 2026)</option>
+              <option value={0}>All Recorded Weeks</option>
+            </select>
+          </div>
+
+          {/* Brand Filter */}
+          <div className="flex items-center gap-1.5 bg-bg-secondary/70 border border-border-subtle rounded-lg px-2.5 py-1.5">
+            <span className="text-text-muted text-[11px] font-medium">Brand:</span>
+            <select
+              value={selectedBrand}
+              onChange={(e) => setSelectedBrand(e.target.value)}
+              className="bg-transparent text-xs text-text-primary font-semibold focus:outline-none cursor-pointer"
+            >
+              <option value="Global View">All Brands (Consolidated)</option>
+              <option value="Explast">Explast (Plastics)</option>
+              <option value="PrintBox">PrintBox (Paper)</option>
+            </select>
+          </div>
+
+          {/* Sales Rep Filter (Admin only) */}
+          {isAdmin && (
+            <div className="flex items-center gap-1.5 bg-bg-secondary/70 border border-border-subtle rounded-lg px-2.5 py-1.5">
+              <User className="w-3.5 h-3.5 text-text-muted" />
+              <span className="text-text-muted text-[11px] font-medium">Sales Rep:</span>
+              <select
+                value={selectedRep}
+                onChange={(e) => setSelectedRep(e.target.value)}
+                className="bg-transparent text-xs text-text-primary font-semibold focus:outline-none cursor-pointer"
+              >
+                <option value="all">All 4 Representatives</option>
+                {salesReps.map((r) => (
+                  <option key={r.id} value={r.name}>
+                    {r.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 text-text-muted text-[11px]">
+          <span>Active Scope:</span>
+          <Badge variant="brand" className="text-[10px]">
+            {selectedRep === 'all' ? 'All Representatives' : selectedRep} • {selectedBrand === 'Global View' ? 'Consolidated' : selectedBrand}
+          </Badge>
+          <span className="text-border-strong">•</span>
+          <span>Showing <strong className="text-text-primary font-mono">{filteredItems.length}</strong> follow-ups</span>
+        </div>
+      </div>
 
       {/* 2. REPUTATION / METHODOLOGY BANNER (Word Template Migration Context) */}
       <div className="bg-bg-card border border-border-subtle rounded-xl p-4 shadow-2xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs">

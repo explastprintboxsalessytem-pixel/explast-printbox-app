@@ -21,9 +21,9 @@ export function PageHeader({
   className = '',
 }: PageHeaderProps) {
   return (
-    <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${className}`}>
-      <div>
-        <div className="flex items-center gap-2 mb-1">
+    <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ${className}`}>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 mb-1 flex-wrap">
           <h2 className="text-xs font-bold uppercase tracking-wider text-text-muted">
             {eyebrow}
           </h2>
@@ -33,11 +33,11 @@ export function PageHeader({
             </Badge>
           )}
         </div>
-        <h1 className="text-2xl font-medium text-text-primary tracking-tight">
+        <h1 className="text-2xl font-semibold text-text-primary tracking-tight">
           {title}
         </h1>
         {description && (
-          <p className="text-xs text-text-secondary mt-0.5">
+          <p className="text-xs text-text-secondary mt-1 max-w-3xl leading-relaxed">
             {description}
           </p>
         )}

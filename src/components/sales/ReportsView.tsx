@@ -113,77 +113,79 @@ export function ReportsView({ brand: initialBrand, currentUser }: ReportsViewPro
       ) : (
         /* VIEW 2: EXECUTIVE COMMERCIAL & PRODUCTION ANALYTICS */
         <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
-          {/* 3.A. REPORTS HEADER & FILTER TOOLBAR */}
+          {/* 3.A. REPORTS HEADER */}
           <PageHeader
             eyebrow={isAdmin ? 'Executive Analytics & Commercial Intelligence' : `Portfolio Analytics • ${currentUser?.name}`}
             badgeText={selectedBrand === 'Global View' ? 'Consolidated Multi-Brand' : `${selectedBrand} Operations`}
-            badgeVariant={isAdmin ? 'neutral' : 'brand'}
+            badgeVariant="brand"
             title="Operations & Enterprise Commercial Reports"
             description="Comprehensive commercial and production performance metrics."
             actions={
-              <div className="flex flex-wrap items-center gap-2.5 text-xs print:hidden">
-                {/* Brand Filter */}
-                <div className="flex items-center gap-1.5 bg-bg-card border border-border-strong/70 rounded-lg px-2.5 py-1.5 shadow-2xs">
-                  <span className="text-text-muted text-[11px] font-medium">Brand:</span>
-                  <select
-                    value={selectedBrand}
-                    onChange={(e) => setSelectedBrand(e.target.value)}
-                    className="bg-transparent text-xs text-text-primary font-semibold focus:outline-none cursor-pointer"
-                  >
-                    <option value="Explast">Explast (Plastics)</option>
-                    <option value="PrintBox">PrintBox (Paper)</option>
-                    {isAdmin && <option value="Global View">Global View</option>}
-                  </select>
-                </div>
-
-                {/* Sales Representative Filter (Admin only) */}
-                {isAdmin && (
-                  <div className="flex items-center gap-1.5 bg-bg-card border border-border-strong/70 rounded-lg px-2.5 py-1.5 shadow-2xs">
-                    <span className="text-text-muted text-[11px] font-medium">Sales Rep:</span>
-                    <select
-                      value={salespersonFilter}
-                      onChange={(e) => setSalespersonFilter(e.target.value)}
-                      className="bg-transparent text-xs text-text-primary font-semibold focus:outline-none cursor-pointer"
-                    >
-                      <option value="all">All Representatives</option>
-                      <option value="Alex L.">Alex L.</option>
-                      <option value="Sunil R.">Sunil R.</option>
-                      <option value="Sarah M.">Sarah M.</option>
-                      <option value="David T.">David T.</option>
-                    </select>
-                  </div>
-                )}
-
-                {/* Period Selector */}
-                <div className="bg-bg-card border border-border-strong/70 rounded-lg p-1 flex shadow-2xs">
-                  {(['30d', '90d', 'ytd', 'custom'] as const).map((pKey) => (
-                    <button
-                      key={pKey}
-                      type="button"
-                      onClick={() => setPeriod(pKey)}
-                      className={`px-3 py-1 rounded font-medium transition-colors ${
-                        period === pKey
-                          ? 'bg-brand-primary text-white font-semibold shadow-xs'
-                          : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
-                      }`}
-                    >
-                      {pKey === '30d' ? 'Last 30 Days' : pKey === '90d' ? 'Last 90 Days' : pKey === 'ytd' ? 'Year to Date' : 'Custom'}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Export PDF Button */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.print()}
-                  className="bg-bg-card border-border-strong shadow-2xs hover:bg-bg-secondary"
-                >
-                  <Download className="w-3.5 h-3.5 mr-1.5" /> Export PDF
-                </Button>
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.print()}
+                className="bg-bg-card border-border-strong shadow-2xs hover:bg-bg-secondary print:hidden shrink-0"
+              >
+                <Download className="w-3.5 h-3.5 mr-1.5" /> Export PDF
+              </Button>
             }
           />
+
+          {/* DEDICATED HORIZONTAL ANALYTICS FILTER TOOLBAR */}
+          <div className="bg-bg-card border border-border-strong/70 rounded-xl p-3 sm:p-3.5 shadow-2xs flex flex-wrap items-center justify-between gap-3 text-xs print:hidden">
+            <div className="flex flex-wrap items-center gap-2.5">
+              {/* Brand Filter */}
+              <div className="flex items-center gap-1.5 bg-bg-secondary/70 border border-border-subtle rounded-lg px-2.5 py-1.5">
+                <span className="text-text-muted text-[11px] font-medium">Brand:</span>
+                <select
+                  value={selectedBrand}
+                  onChange={(e) => setSelectedBrand(e.target.value)}
+                  className="bg-transparent text-xs text-text-primary font-semibold focus:outline-none cursor-pointer"
+                >
+                  <option value="Explast">Explast (Plastics)</option>
+                  <option value="PrintBox">PrintBox (Paper)</option>
+                  {isAdmin && <option value="Global View">Global View (Consolidated)</option>}
+                </select>
+              </div>
+
+              {/* Sales Representative Filter (Admin only) */}
+              {isAdmin && (
+                <div className="flex items-center gap-1.5 bg-bg-secondary/70 border border-border-subtle rounded-lg px-2.5 py-1.5">
+                  <span className="text-text-muted text-[11px] font-medium">Sales Rep:</span>
+                  <select
+                    value={salespersonFilter}
+                    onChange={(e) => setSalespersonFilter(e.target.value)}
+                    className="bg-transparent text-xs text-text-primary font-semibold focus:outline-none cursor-pointer"
+                  >
+                    <option value="all">All 4 Representatives</option>
+                    <option value="Alex L.">Alex L.</option>
+                    <option value="Sunil R.">Sunil R.</option>
+                    <option value="Sarah M.">Sarah M.</option>
+                    <option value="David T.">David T.</option>
+                  </select>
+                </div>
+              )}
+            </div>
+
+            {/* Period Selector */}
+            <div className="bg-bg-secondary/70 border border-border-subtle rounded-lg p-1 flex">
+              {(['30d', '90d', 'ytd', 'custom'] as const).map((pKey) => (
+                <button
+                  key={pKey}
+                  type="button"
+                  onClick={() => setPeriod(pKey)}
+                  className={`px-3 py-1 rounded font-medium transition-colors ${
+                    period === pKey
+                      ? 'bg-brand-primary text-white font-semibold shadow-xs'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-bg-card'
+                  }`}
+                >
+                  {pKey === '30d' ? 'Last 30 Days' : pKey === '90d' ? 'Last 90 Days' : pKey === 'ytd' ? 'Year to Date' : 'Custom'}
+                </button>
+              ))}
+            </div>
+          </div>
 
       {/* 3.B. MAIN KPI CARDS (ROW 1 - 4 CARDS) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
