@@ -46,7 +46,11 @@ export function ModernDashboardView({
 
   const brandProjects = projects
     .filter(p => !p.brand || p.brand === brand || p.business_unit === brand)
-    .filter(p => isAdmin || p.assigned_salesperson === currentUser.name || p.salesperson === currentUser.name);
+    .filter(p => {
+      if (isAdmin) return true;
+      const rep = p.assigned_salesperson || p.salesperson || p.client?.assigned_salesperson || p.clients?.assigned_salesperson;
+      return rep === currentUser.name;
+    });
 
   // Fetch period-scoped metrics from central analytics engine
   const metrics = DemoService.getAnalyticsMetrics({

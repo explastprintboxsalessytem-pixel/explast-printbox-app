@@ -21,14 +21,14 @@ import {
 } from './demo-data';
 
 const STORAGE_KEYS = {
-  CUSTOMERS: 'explast_demo_customers_v1',
-  PROJECTS: 'explast_demo_projects_v1',
-  QUOTATIONS: 'explast_demo_quotations_v1',
-  DESIGNS: 'explast_demo_designs_v1',
-  PRODUCTION: 'explast_demo_production_v1',
-  ACTIVITIES: 'explast_demo_activities_v1',
-  FOLLOWUPS: 'explast_demo_followups_v1',
-  INITIALIZED: 'explast_demo_initialized_v1',
+  CUSTOMERS: 'explast_demo_customers_v2',
+  PROJECTS: 'explast_demo_projects_v2',
+  QUOTATIONS: 'explast_demo_quotations_v2',
+  DESIGNS: 'explast_demo_designs_v2',
+  PRODUCTION: 'explast_demo_production_v2',
+  ACTIVITIES: 'explast_demo_activities_v2',
+  FOLLOWUPS: 'explast_demo_followups_v2',
+  INITIALIZED: 'explast_demo_initialized_v2',
 };
 
 const memoryStore: Record<string, any> = {};
@@ -59,13 +59,19 @@ export const DemoService = {
   initialize(force = false): void {
     const isInitialized = getStore<boolean>(STORAGE_KEYS.INITIALIZED, false);
     const existingCustomers = getStore<any[]>(STORAGE_KEYS.CUSTOMERS, []);
+    const existingProjects = getStore<any[]>(STORAGE_KEYS.PROJECTS, []);
     const existingFollowups = getStore<any[]>(STORAGE_KEYS.FOLLOWUPS, []);
     const isStale =
+      !isInitialized ||
+      force ||
       !existingCustomers ||
       existingCustomers.length < DEMO_CUSTOMERS.length ||
+      !existingProjects ||
+      existingProjects.length < DEMO_PROJECTS.length ||
+      existingProjects.some(p => !p.assigned_salesperson) ||
       !existingFollowups ||
       existingFollowups.length < DEMO_WEEKLY_FOLLOWUPS.length;
-    if (!isInitialized || force || isStale) {
+    if (isStale) {
       setStore(STORAGE_KEYS.CUSTOMERS, DEMO_CUSTOMERS);
       setStore(STORAGE_KEYS.PROJECTS, DEMO_PROJECTS);
       setStore(STORAGE_KEYS.QUOTATIONS, DEMO_QUOTATIONS);

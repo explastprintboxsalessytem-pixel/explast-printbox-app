@@ -395,7 +395,11 @@ function PipelineView({
   const isAdmin = currentUser.role === 'admin';
   const brandProjects = projects
     .filter(p => !p.brand || p.brand === brand || p.business_unit === brand)
-    .filter(p => isAdmin || p.assigned_salesperson === currentUser.name || p.salesperson === currentUser.name);
+    .filter(p => {
+      if (isAdmin) return true;
+      const rep = p.assigned_salesperson || p.salesperson || p.client?.assigned_salesperson || p.clients?.assigned_salesperson;
+      return rep === currentUser.name;
+    });
 
   // Compute stage counts for filter pills
   const discoveryCount = brandProjects.filter(p => p.kanban_stage === 'Discovery' || !p.kanban_stage).length;
