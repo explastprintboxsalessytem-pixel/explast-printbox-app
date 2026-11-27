@@ -679,12 +679,12 @@ export const DemoService = {
     const mult = periodMultipliers[period] || 1.0;
 
     const comparisonSuffix = period === 'month'
-      ? 'compared with last month'
+      ? 'vs last month'
       : period === 'last_month'
-      ? 'compared with prior month'
+      ? 'vs prior month'
       : period === '3months' || period === '90d'
-      ? 'compared with previous 3 months'
-      : 'compared with previous period';
+      ? 'vs last 3 months'
+      : 'vs prior period';
 
     // 1. Sales Performance
     const totalRequests = Math.max(1, Math.round(projects.length * (period === 'month' ? 0.45 : period === '3months' ? 0.75 : 1.0)));
@@ -948,14 +948,14 @@ export const DemoService = {
         totalQuotationValue,
         activeProjectsCount,
         quotedSparkline: [1850, 2100, 2600, 3100, 3450, Math.round(totalQuotationValue / 1000)],
-        quotedVariation: { percent: 12, isPositive: true, comparisonText: `+12% ${comparisonSuffix}` },
+        quotedVariation: { percent: 12, isPositive: true, comparisonText: comparisonSuffix },
         acceptedQuotationValue,
         acceptedCount,
         revenueSparkline: [950, 1250, 1600, 1950, 2200, Math.round(acceptedQuotationValue / 1000)],
-        revenueVariation: { percent: 16, isPositive: true, comparisonText: `+16% ${comparisonSuffix}` },
+        revenueVariation: { percent: 16, isPositive: true, comparisonText: comparisonSuffix },
         conversionRate,
-        conversionVariation: { percent: 4, isPositive: true, comparisonText: `+4% ${comparisonSuffix}` },
-        activeProjectsVariation: { percent: 8, isPositive: true, comparisonText: `+8% ${comparisonSuffix}` },
+        conversionVariation: { percent: 4, isPositive: true, comparisonText: comparisonSuffix },
+        activeProjectsVariation: { percent: 8, isPositive: true, comparisonText: comparisonSuffix },
         pendingQuotationValue,
         pendingCount,
         rejectedCount,
@@ -977,7 +977,7 @@ export const DemoService = {
       production: {
         totalJobs,
         activeJobsCount: activeJobs.length,
-        activeJobsVariation: { percent: 6, isPositive: true, comparisonText: `+6% ${comparisonSuffix}` },
+        activeJobsVariation: { percent: 6, isPositive: true, comparisonText: comparisonSuffix },
         completedJobsCount: completedJobs.length,
         completedJobsText: `${completedJobs.length} completed ${period === 'month' ? 'this month' : 'this period'}`,
         jobsByStage,

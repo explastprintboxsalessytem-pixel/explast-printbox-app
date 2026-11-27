@@ -50,6 +50,11 @@ export function KPICard({
     neutral: 'text-text-primary',
   };
 
+  // Strip redundant leading percentage from comparisonText if present (e.g. "+12% compared with...")
+  const cleanComparisonText = variation?.comparisonText
+    ? variation.comparisonText.replace(/^[+-]?\d+%\s*/, '')
+    : trend;
+
   return (
     <Card
       onClick={onClick}
@@ -58,7 +63,7 @@ export function KPICard({
       } ${className}`}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted truncate">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-text-muted truncate">
           {label}
         </span>
         <div className="flex items-center gap-2 shrink-0">
@@ -74,31 +79,38 @@ export function KPICard({
         </div>
       </div>
 
-      <div className="flex items-baseline justify-between gap-2 mt-1">
-        <p className={`font-mono text-2xl font-bold ${accentValueColors[accent]}`}>{value}</p>
-        
-        {variation && (
-          <div
-            className={`flex items-center gap-0.5 text-[11px] font-bold shrink-0 ${
-              variation.percent >= 0 ? 'text-[#4F8F68]' : 'text-[#B85C5C]'
-            }`}
-          >
-            {variation.percent >= 0 ? (
-              <TrendingUp className="w-3 h-3" />
-            ) : (
-              <TrendingDown className="w-3 h-3" />
-            )}
-            <span>
-              {variation.percent >= 0 ? `+${variation.percent}%` : `${variation.percent}%`}
-            </span>
-          </div>
-        )}
+      {/* LARGE VALUE */}
+      <div className="mt-2">
+        <p className={`font-mono text-2xl font-bold tracking-tight ${accentValueColors[accent]}`}>
+          {value}
+        </p>
       </div>
 
-      {(trend || variation?.comparisonText) && (
-        <span className="text-[11px] text-text-secondary mt-1.5 block truncate">
-          {trend || variation?.comparisonText}
-        </span>
+      {/* CLEAN INLINE FOOTER: TREND / VARIATION & COMPARISON TEXT */}
+      {(variation || cleanComparisonText) && (
+        <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-border-subtle/50 text-[11px] leading-tight">
+          {variation && (
+            <span
+              className={`inline-flex items-center gap-0.5 font-bold shrink-0 ${
+                variation.percent >= 0 ? 'text-[#086B68]' : 'text-rose-600'
+              }`}
+            >
+              {variation.percent >= 0 ? (
+                <TrendingUp className="w-3 h-3" />
+              ) : (
+                <TrendingDown className="w-3 h-3" />
+              )}
+              <span>
+                {variation.percent >= 0 ? `+${variation.percent}%` : `${variation.percent}%`}
+              </span>
+            </span>
+          )}
+          {cleanComparisonText && (
+            <span className="text-text-secondary truncate">
+              {cleanComparisonText}
+            </span>
+          )}
+        </div>
       )}
     </Card>
   );

@@ -71,21 +71,21 @@ export function TasksSection({
   const getUrgencyBadge = (urgency: TaskUrgency, dueDate: string) => {
     if (urgency === 'overdue') {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
-          <AlertCircle className="w-3 h-3 text-rose-600" /> Overdue ({dueDate})
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 whitespace-nowrap">
+          <AlertCircle className="w-3 h-3 text-rose-600 shrink-0" /> Overdue ({dueDate})
         </span>
       );
     }
     if (urgency === 'due_today') {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
-          <Clock className="w-3 h-3 text-amber-600" /> Due Today
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">
+          <Clock className="w-3 h-3 text-amber-600 shrink-0" /> Due Today
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-50 text-teal-700 border border-teal-200">
-        <Calendar className="w-3 h-3 text-teal-600" /> Due Soon ({dueDate})
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-50 text-teal-700 border border-teal-200 whitespace-nowrap">
+        <Calendar className="w-3 h-3 text-teal-600 shrink-0" /> Due Soon ({dueDate})
       </span>
     );
   };
@@ -169,23 +169,23 @@ export function TasksSection({
                     : 'bg-bg-card border-border-subtle hover:border-border-strong'
                 }`}
               >
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   {/* Left: Task Content */}
                   <div className="space-y-1.5 min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       {getUrgencyBadge(task.urgency, task.due_date)}
                       
-                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-bg-secondary text-text-secondary">
+                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-bg-secondary text-text-secondary whitespace-nowrap">
                         {task.category_label}
                       </span>
 
                       {isAdmin && (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200">
-                          <User className="w-3 h-3" /> {task.assigned_to}
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 whitespace-nowrap">
+                          <User className="w-3 h-3 shrink-0" /> {task.assigned_to}
                         </span>
                       )}
 
-                      <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded bg-neutral-100 text-neutral-600">
+                      <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-600 whitespace-nowrap">
                         {task.brand}
                       </span>
                     </div>
@@ -202,38 +202,41 @@ export function TasksSection({
                     <div className="flex flex-wrap items-center gap-3 text-xs pt-0.5">
                       {task.related_client_name && (
                         <button
+                          type="button"
                           onClick={() => onOpenTask(task)}
-                          className="inline-flex items-center gap-1 text-brand-primary hover:underline font-medium text-[11px]"
+                          className="inline-flex items-center gap-1 text-brand-primary hover:underline font-medium text-[11px] whitespace-nowrap"
                         >
-                          <Building2 className="w-3 h-3" /> {task.related_client_name}
+                          <Building2 className="w-3 h-3 shrink-0" /> {task.related_client_name}
                         </button>
                       )}
                       {task.related_project_name && (
                         <button
+                          type="button"
                           onClick={() => onOpenTask(task)}
-                          className="inline-flex items-center gap-1 text-text-secondary hover:text-text-primary font-medium text-[11px]"
+                          className="inline-flex items-center gap-1 text-text-secondary hover:text-text-primary font-medium text-[11px] whitespace-nowrap"
                         >
-                          <FolderKanban className="w-3 h-3" /> {task.related_project_name}
+                          <FolderKanban className="w-3 h-3 shrink-0" /> {task.related_project_name}
                         </button>
                       )}
                       {task.related_quotation_number && (
                         <button
+                          type="button"
                           onClick={() => onOpenTask(task)}
-                          className="inline-flex items-center gap-1 font-mono text-[#6E4A9E] hover:underline font-semibold text-[11px]"
+                          className="inline-flex items-center gap-1 font-mono text-[#6E4A9E] hover:underline font-semibold text-[11px] whitespace-nowrap"
                         >
-                          <FileText className="w-3 h-3" /> {task.related_quotation_number}
+                          <FileText className="w-3 h-3 shrink-0" /> {task.related_quotation_number}
                         </button>
                       )}
                     </div>
                   </div>
 
                   {/* Right: Actions */}
-                  <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+                  <div className="flex items-center gap-2 shrink-0 self-start sm:self-center mt-1 sm:mt-0">
                     {/* Action 1: Open */}
                     <button
                       type="button"
                       onClick={() => onOpenTask(task)}
-                      className="px-3 py-1.5 rounded-md text-xs font-semibold text-text-primary bg-bg-secondary hover:bg-bg-secondary/80 border border-border-subtle flex items-center gap-1 transition-colors"
+                      className="px-3 py-1.5 rounded-md text-xs font-semibold text-text-primary bg-bg-secondary hover:bg-bg-secondary/80 border border-border-subtle flex items-center gap-1 transition-colors whitespace-nowrap"
                       title="Open related record"
                     >
                       <ExternalLink className="w-3.5 h-3.5 text-text-muted" /> Open
@@ -245,7 +248,7 @@ export function TasksSection({
                       onClick={() =>
                         setReschedulingTaskId(isRescheduling ? null : task.id)
                       }
-                      className="px-3 py-1.5 rounded-md text-xs font-semibold text-text-secondary hover:text-text-primary bg-bg-card hover:bg-bg-secondary border border-border-subtle flex items-center gap-1 transition-colors"
+                      className="px-3 py-1.5 rounded-md text-xs font-semibold text-text-secondary hover:text-text-primary bg-bg-card hover:bg-bg-secondary border border-border-subtle flex items-center gap-1 transition-colors whitespace-nowrap"
                       title="Reschedule deadline"
                     >
                       <RotateCcw className="w-3.5 h-3.5 text-text-muted" /> Reschedule
@@ -255,7 +258,7 @@ export function TasksSection({
                     <button
                       type="button"
                       onClick={() => handleComplete(task.id)}
-                      className="px-3.5 py-1.5 rounded-md text-xs font-semibold text-white bg-brand-primary hover:bg-brand-primary-dark shadow-xs flex items-center gap-1.5 transition-colors"
+                      className="px-3.5 py-1.5 rounded-md text-xs font-semibold text-white bg-brand-primary hover:bg-brand-primary-dark shadow-xs flex items-center gap-1.5 transition-colors whitespace-nowrap"
                       title="Mark task completed"
                     >
                       <Check className="w-3.5 h-3.5" /> Done

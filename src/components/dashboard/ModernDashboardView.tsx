@@ -352,8 +352,8 @@ export function ModernDashboardView({
       {/* ==================================================================== */}
       {isAdmin && (
         <>
-          {/* ROW 1: SIX MAIN BUSINESS KPI CARDS (Responsive Grid) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+          {/* ROW 1: SIX MAIN BUSINESS KPI CARDS (Spacious 3x2 Grid) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {/* Card 1: Total Quoted Value */}
             <KPICard
               label="Total Quoted Value"
@@ -421,7 +421,20 @@ export function ModernDashboardView({
             />
           </div>
 
-          {/* ROW 2: COMPANY SALES PERFORMANCE (~65%) & COMPANY PROJECT PIPELINE (~35%) */}
+          {/* ROW 2: BUSINESS ATTENTION (Prominent Full Width - Unstacked & Clear) */}
+          <TasksSection
+            tasks={tasksState}
+            isAdmin={true}
+            title="Business Attention"
+            subtitle="Items requiring attention across the company."
+            onCompleteTask={handleCompleteTask}
+            onRescheduleTask={handleRescheduleTask}
+            onOpenTask={handleOpenTask}
+            onViewAll={() => setIsTaskModalOpen(true)}
+            onAddTask={() => setIsTaskModalOpen(true)}
+          />
+
+          {/* ROW 3: COMPANY SALES PERFORMANCE (~65%) & COMPANY PROJECT PIPELINE (~35%) */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <Card className="lg:col-span-8 p-6 space-y-4 border border-border-strong/70 shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border-subtle pb-3">
@@ -466,7 +479,7 @@ export function ModernDashboardView({
             />
           </div>
 
-          {/* ROW 3: SALES TEAM PERFORMANCE (~60%) & BUSINESS ATTENTION (~40%) */}
+          {/* ROW 4: SALES TEAM PERFORMANCE (~60%) & PRODUCTION OVERVIEW (~40%) */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <SalesTeamPerformanceTable
               reps={metrics.salesRepsList}
@@ -475,35 +488,20 @@ export function ModernDashboardView({
               className="lg:col-span-7"
             />
 
-            <div className="lg:col-span-5">
-              <TasksSection
-                tasks={tasksState}
-                isAdmin={true}
-                title="Business Attention"
-                subtitle="Items requiring attention across the company."
-                onCompleteTask={handleCompleteTask}
-                onRescheduleTask={handleRescheduleTask}
-                onOpenTask={handleOpenTask}
-                onViewAll={() => setIsTaskModalOpen(true)}
-                onAddTask={() => setIsTaskModalOpen(true)}
-              />
-            </div>
-          </div>
-
-          {/* ROW 4: PRODUCTION OVERVIEW (~50%) & RECENT COMPANY ACTIVITY (~50%) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ProductionOverviewCard
               workload={metrics.production.workload}
               brand={brand}
-            />
-
-            <RecentActivityCard
-              activities={activities}
-              isAdmin={true}
-              title="Recent Company Activity"
-              subtitle="Latest sales requests, issued quotes, production jobs, and completed actions"
+              className="lg:col-span-5"
             />
           </div>
+
+          {/* ROW 5: RECENT COMPANY ACTIVITY (Full Width) */}
+          <RecentActivityCard
+            activities={activities}
+            isAdmin={true}
+            title="Recent Company Activity"
+            subtitle="Latest sales requests, issued quotes, production jobs, and completed actions"
+          />
         </>
       )}
 
