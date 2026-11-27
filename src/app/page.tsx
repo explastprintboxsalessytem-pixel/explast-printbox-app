@@ -18,6 +18,7 @@ import { ModernDashboardView } from '../components/dashboard/ModernDashboardView
 import { ClientDetailModal } from '../components/sales/ClientDetailModal';
 import { NewClientModal } from '../components/sales/NewClientModal';
 import { ProjectDetailModal } from '../components/sales/ProjectDetailModal';
+import { QuotationDetailModal } from '../components/sales/QuotationDetailModal';
 import { AppUser, APP_USERS } from '../types/demo';
 import { SalesDataService } from '../lib/sales/data-service';
 import { ExplastSalesService } from '../lib/sales/explast-service';
@@ -66,6 +67,7 @@ export default function App() {
   });
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [selectedProjectForModal, setSelectedProjectForModal] = useState<any | null>(null);
+  const [selectedQuotationForModal, setSelectedQuotationForModal] = useState<any | null>(null);
   const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
 
   // Refresh projects and clients across both systems and demo dataset
@@ -325,6 +327,10 @@ export default function App() {
           setResumeDraftId(undefined);
           setIsFormOpen(true);
         }}
+        onOpenQuotation={(qId) => {
+          const q = DemoService.getQuotations().find(x => x.id === qId);
+          if (q) setSelectedQuotationForModal(q);
+        }}
       />
 
       {/* NEW CLIENT REGISTRATION MODAL */}
@@ -344,7 +350,26 @@ export default function App() {
         isOpen={!!selectedProjectForModal}
         onClose={() => setSelectedProjectForModal(null)}
         onOpenClient={(clientId: string) => setSelectedCustomerId(clientId)}
+        onOpenQuotation={(qId) => {
+          const q = DemoService.getQuotations().find(x => x.id === qId);
+          if (q) setSelectedQuotationForModal(q);
+        }}
         currentUser={currentUser}
+      />
+
+      {/* OFFICIAL COMPANY QUOTATION DETAIL & PRINT MODAL */}
+      <QuotationDetailModal
+        quotation={selectedQuotationForModal}
+        isOpen={!!selectedQuotationForModal}
+        currentUser={currentUser}
+        onClose={() => setSelectedQuotationForModal(null)}
+        onStatusChange={(id, status, actor, notes) => {
+          DemoService.updateQuotationStatus(id, status, actor || currentUser?.name || 'Alex L.', notes);
+          refreshData();
+          const updated = DemoService.getQuotations().find(x => x.id === id);
+          if (updated) setSelectedQuotationForModal(updated);
+        }}
+        onNavigateToCustomer={(cId) => setSelectedCustomerId(cId)}
       />
     </div>
   );

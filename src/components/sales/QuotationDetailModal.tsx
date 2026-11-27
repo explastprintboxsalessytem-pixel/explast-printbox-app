@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import { DemoQuotation, DemoQuotationStatus, AppUser } from '@/types/demo';
 import { DemoService } from '@/lib/sales/demo-service';
+import { CompanyQuotationDocument } from './CompanyQuotationDocument';
 import { Button } from '../ui/Button';
-import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import {
   X,
@@ -12,20 +12,12 @@ import {
   Printer,
   CheckCircle,
   Clock,
-  Building,
-  User,
-  Calendar,
-  Layers,
-  Sparkles,
-  Info,
-  DollarSign,
-  AlertTriangle,
   ShieldCheck,
   Send,
   RotateCcw,
   CheckCircle2,
-  Factory,
-  ArrowRight,
+  Sliders,
+  Layers,
 } from 'lucide-react';
 
 interface QuotationDetailModalProps {
@@ -45,8 +37,7 @@ export function QuotationDetailModal({
   onStatusChange,
   onNavigateToCustomer,
 }: QuotationDetailModalProps) {
-  const [adminNote, setAdminNote] = useState('');
-  const [showAdminNoteInput, setShowAdminNoteInput] = useState(false);
+  const [viewMode, setViewMode] = useState<'document' | 'governance'>('document');
 
   if (!isOpen || !quotation) return null;
 
@@ -83,13 +74,13 @@ export function QuotationDetailModal({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-8 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-4xl max-h-[92vh] bg-bg-card border border-border-subtle rounded-xl shadow-2xl flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 print:p-0 print:bg-white print:static print:z-0 print:inset-auto">
+      <div className="relative w-full max-w-4xl max-h-[94vh] bg-bg-card border border-border-subtle rounded-xl shadow-2xl flex flex-col overflow-hidden print:border-none print:shadow-none print:max-h-none print:w-full">
         
-        {/* MODAL HEADER */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border-subtle bg-bg-secondary/40">
-          <div className="flex items-center space-x-4">
-            <div className="w-10 h-10 rounded-lg bg-brand-primary text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
+        {/* MODAL HEADER (HIDDEN ON PRINT) */}
+        <div className="flex items-center justify-between px-6 py-3.5 border-b border-border-subtle bg-bg-secondary/40 print:hidden">
+          <div className="flex items-center space-x-3.5">
+            <div className="w-9 h-9 rounded-lg bg-brand-primary text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
               <FileText className="w-5 h-5" />
             </div>
             <div>
@@ -113,10 +104,11 @@ export function QuotationDetailModal({
           <div className="flex items-center space-x-2">
             <button
               onClick={() => window.print()}
-              className="p-1.5 text-text-muted hover:text-text-primary hover:bg-bg-secondary rounded-lg transition-colors"
-              title="Print Quotation"
+              className="p-1.5 text-text-muted hover:text-text-primary hover:bg-bg-secondary rounded-lg transition-colors flex items-center gap-1.5 text-xs font-semibold px-2.5"
+              title="Print Official Quotation"
             >
               <Printer className="w-4 h-4" />
+              <span className="hidden sm:inline">Print / PDF</span>
             </button>
             <button
               onClick={onClose}
@@ -127,19 +119,53 @@ export function QuotationDetailModal({
           </div>
         </div>
 
-        {/* WORKFLOW PROGRESS TRACKER (Requirement 2) */}
-        <div className="px-6 py-3 bg-bg-secondary/30 border-b border-border-subtle overflow-x-auto">
+        {/* VIEW MODE TABS (HIDDEN ON PRINT) */}
+        <div className="px-6 py-2.5 bg-bg-secondary/50 border-b border-border-subtle flex items-center justify-between print:hidden">
+          <div className="flex items-center space-x-1.5 p-1 bg-bg-card rounded-lg border border-border-subtle text-xs">
+            <button
+              type="button"
+              onClick={() => setViewMode('document')}
+              className={`px-3 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5 ${
+                viewMode === 'document'
+                  ? 'bg-brand-primary text-white shadow-xs'
+                  : 'text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5" />
+              Official Company Quotation Sheet
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('governance')}
+              className={`px-3 py-1.5 rounded-md font-semibold transition-all flex items-center gap-1.5 ${
+                viewMode === 'governance'
+                  ? 'bg-brand-primary text-white shadow-xs'
+                  : 'text-text-secondary hover:text-text-primary'
+              }`}
+            >
+              <Sliders className="w-3.5 h-3.5" />
+              Approval Workflow & History
+            </button>
+          </div>
+
+          <span className="text-[11px] text-text-muted hidden sm:inline-flex items-center gap-1">
+            <Printer className="w-3 h-3" /> Standard A4 Print Ready
+          </span>
+        </div>
+
+        {/* WORKFLOW PROGRESS TRACKER (HIDDEN ON PRINT) */}
+        <div className="px-6 py-2.5 bg-bg-secondary/30 border-b border-border-subtle overflow-x-auto print:hidden">
           <div className="flex items-center justify-between min-w-[620px] text-xs">
             
             {/* Step 1: Sales Costing */}
             <div className="flex items-center space-x-2">
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
                 quotation.status !== 'draft' ? 'bg-color-success text-white' : 'bg-brand-primary text-white'
               }`}>
                 {quotation.status !== 'draft' ? '✓' : '1'}
               </div>
               <div>
-                <p className="font-semibold text-text-primary leading-tight">1. Sales Costing</p>
+                <p className="font-semibold text-text-primary leading-tight text-[11px]">1. Sales Costing</p>
                 <span className="text-[10px] text-text-muted">Prices & Margins Prepared</span>
               </div>
             </div>
@@ -148,7 +174,7 @@ export function QuotationDetailModal({
 
             {/* Step 2: Admin Approval */}
             <div className="flex items-center space-x-2">
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
                 quotation.status === 'admin_approved' || quotation.status === 'sent' || quotation.status === 'awaiting_response' || quotation.status === 'accepted'
                   ? 'bg-color-success text-white'
                   : quotation.status === 'pending_approval'
@@ -158,7 +184,7 @@ export function QuotationDetailModal({
                 {quotation.status === 'admin_approved' || quotation.status === 'sent' || quotation.status === 'awaiting_response' || quotation.status === 'accepted' ? '✓' : '2'}
               </div>
               <div>
-                <p className="font-semibold text-text-primary leading-tight">2. Admin Approval</p>
+                <p className="font-semibold text-text-primary leading-tight text-[11px]">2. Admin Approval</p>
                 <span className="text-[10px] text-text-muted">
                   {quotation.status === 'pending_approval' ? 'Awaiting Margin Check' : 'Authorized by Admin'}
                 </span>
@@ -173,7 +199,7 @@ export function QuotationDetailModal({
 
             {/* Step 3: Sent to Client */}
             <div className="flex items-center space-x-2">
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
                 quotation.status === 'accepted'
                   ? 'bg-color-success text-white'
                   : quotation.status === 'sent' || quotation.status === 'awaiting_response'
@@ -183,7 +209,7 @@ export function QuotationDetailModal({
                 {quotation.status === 'accepted' ? '✓' : '3'}
               </div>
               <div>
-                <p className="font-semibold text-text-primary leading-tight">3. Client Review</p>
+                <p className="font-semibold text-text-primary leading-tight text-[11px]">3. Client Review</p>
                 <span className="text-[10px] text-text-muted">Offer in Negotiation</span>
               </div>
             </div>
@@ -192,7 +218,7 @@ export function QuotationDetailModal({
 
             {/* Step 4: Client Go-Ahead & Automated Production */}
             <div className="flex items-center space-x-2">
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
                 quotation.status === 'accepted'
                   ? 'bg-color-success text-white'
                   : 'bg-bg-secondary text-text-muted'
@@ -200,7 +226,7 @@ export function QuotationDetailModal({
                 {quotation.status === 'accepted' ? '✓' : '4'}
               </div>
               <div>
-                <p className="font-semibold text-text-primary leading-tight">4. Client Go-Ahead</p>
+                <p className="font-semibold text-text-primary leading-tight text-[11px]">4. Client Go-Ahead</p>
                 <span className="text-[10px] text-text-muted">Auto Production Dispatch</span>
               </div>
             </div>
@@ -209,201 +235,162 @@ export function QuotationDetailModal({
         </div>
 
         {/* MODAL BODY */}
-        <div className="p-6 overflow-y-auto space-y-6 flex-1">
+        <div className="overflow-y-auto flex-1">
           
-          {/* CLIENT CONFIRMATION & AUTO-PRODUCTION SUCCESS BANNER */}
-          {quotation.status === 'accepted' && (
-            <div className="p-4 rounded-xl bg-color-success/10 border border-color-success/30 flex items-center justify-between animate-in fade-in">
-              <div className="flex items-center space-x-3">
-                <CheckCircle2 className="w-5 h-5 text-color-success shrink-0" />
-                <div>
-                  <h4 className="text-sm font-semibold text-color-success">Order Confirmed by Client & Dispatched to Production</h4>
-                  <p className="text-xs text-text-secondary mt-0.5">
-                    {linkedProduction
-                      ? `Manufacturing Job #${linkedProduction.job_reference} has been automatically staged on ${linkedProduction.assigned_team}.`
-                      : 'Production Job automatically queued for plant floor extrusion.'}
-                  </p>
-                </div>
-              </div>
-              {linkedProduction && (
-                <Badge variant="success">Stage: {linkedProduction.current_stage?.toUpperCase()}</Badge>
-              )}
+          {/* VIEW 1: OFFICIAL COMPANY QUOTATION DOCUMENT (DEFAULT) */}
+          {viewMode === 'document' ? (
+            <div className="p-4 sm:p-8 bg-zinc-100/70 min-h-full flex justify-center print:bg-white print:p-0">
+              <CompanyQuotationDocument
+                quotation={quotation}
+                brand={quotation.brand || 'PrintBox'}
+              />
             </div>
-          )}
-
-          {/* ADMIN APPROVAL STATUS BANNER */}
-          {quotation.status === 'pending_approval' && (
-            <div className="p-4 rounded-xl bg-color-warning/10 border border-color-warning/30 flex items-center justify-between animate-in fade-in">
-              <div className="flex items-center space-x-3">
-                <ShieldCheck className="w-5 h-5 text-color-warning shrink-0" />
-                <div>
-                  <h4 className="text-sm font-semibold text-color-warning">Pending Internal Admin Approval</h4>
-                  <p className="text-xs text-text-secondary mt-0.5">
-                    Price calculation and profit margins must be verified and authorized by management before transmitting to the client.
-                  </p>
-                </div>
-              </div>
-              {isAdmin && (
-                <div className="flex items-center space-x-2">
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      onStatusChange?.(quotation.id, 'admin_approved', currentActorName, 'Pricing and gross margin verified and approved by management.');
-                    }}
-                  >
-                    <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> Approve as Admin
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* 1. TOP METADATA BAR */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-lg bg-bg-secondary/30 border border-border-subtle text-xs">
-            <div>
-              <span className="text-text-muted uppercase text-[10px] block">Customer</span>
-              <button
-                onClick={() => onNavigateToCustomer?.(quotation.client_id)}
-                className="font-semibold text-text-primary hover:text-brand-primary hover:underline text-left mt-0.5"
-              >
-                {quotation.client_name}
-              </button>
-            </div>
-            <div>
-              <span className="text-text-muted uppercase text-[10px] block">Sales Representative</span>
-              <p className="font-semibold text-text-primary mt-0.5">{quotation.salesperson}</p>
-            </div>
-            <div>
-              <span className="text-text-muted uppercase text-[10px] block">Creation Date</span>
-              <p className="font-semibold text-text-primary mt-0.5">{quotation.created_at}</p>
-            </div>
-            <div>
-              <span className="text-text-muted uppercase text-[10px] block">Validity</span>
-              <p className="font-semibold text-text-primary mt-0.5">{quotation.valid_until}</p>
-            </div>
-          </div>
-
-          {/* 2. STANDARDISED LINE ITEMS & SPECIFICATION */}
-          <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted mb-3 flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5 text-brand-primary" /> Standardised Commercial Specification
-            </h3>
-            
-            <div className="border border-border-subtle rounded-lg overflow-hidden">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-bg-secondary text-text-muted uppercase text-[10px] font-bold">
-                  <tr>
-                    <th className="px-4 py-2.5">Item & Material Formulation</th>
-                    <th className="px-4 py-2.5">Type & Finish</th>
-                    <th className="px-4 py-2.5 text-right">Volume</th>
-                    <th className="px-4 py-2.5 text-right">Unit Price</th>
-                    <th className="px-4 py-2.5 text-right">Prepress Tooling</th>
-                    <th className="px-4 py-2.5 text-right">Subtotal (Excl. VAT)</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border-subtle">
-                  {quotation.items.map((item) => (
-                    <tr key={item.id} className="hover:bg-bg-secondary/30">
-                      <td className="px-4 py-3">
-                        <p className="font-semibold text-text-primary">{item.description}</p>
-                        <p className="text-[11px] text-text-secondary mt-0.5">
-                          {item.material_family} • <strong className="text-brand-primary">{item.formulation}</strong>
-                        </p>
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge variant="neutral">{item.final_product_type}</Badge>
-                        <span className="ml-2 text-[11px] text-text-secondary">
-                          {item.print_type === 'printed' ? `${item.num_colors} Cols Flexo` : 'Plain'} • {item.thickness_micron}µm
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono font-bold">
-                        {item.quantity.toLocaleString()} {item.quantity_unit}
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono">
-                        Rs {item.unit_price_mur.toFixed(2)}
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono text-text-secondary">
-                        {item.tooling_stereos_fee_mur > 0 ? `Rs ${item.tooling_stereos_fee_mur.toLocaleString()}` : 'Included'}
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono font-bold text-text-primary">
-                        Rs {item.subtotal_mur.toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* 3. COST BREAKDOWN & COMMERCIAL TOTALS */}
-          <div className="flex flex-col sm:flex-row justify-between items-start gap-6 pt-2">
-            <div className="text-xs text-text-secondary max-w-md space-y-2">
-              <div className="p-3 bg-bg-secondary/20 rounded border border-border-subtle space-y-1">
-                <span className="font-semibold text-text-primary text-[11px]">Commercial Governance & Terms:</span>
-                <p>• Payment Terms: <strong className="text-text-primary">{quotation.payment_terms || '30 Days End of Month'}</strong></p>
-                <p>• Estimated Lead Time: <strong className="text-text-primary">{quotation.estimated_lead_time_days || 14} working days from order approval</strong></p>
-                <p>• Delivery: Royal Road warehouse delivery included (standard tolerances ±5%).</p>
-              </div>
-
-              {quotation.admin_approval && (
-                <div className="p-2.5 rounded bg-brand-primary/10 border border-brand-primary/20 text-[11px] text-brand-primary space-y-0.5">
-                  <p className="font-semibold flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5" /> Admin Margin Authorization:
-                  </p>
-                  <p className="text-text-secondary">
-                    Approved by {quotation.admin_approval.approved_by} on {quotation.admin_approval.approved_at.substring(0, 16).replace('T', ' ')}.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div className="w-full sm:w-72 bg-bg-secondary/40 p-4 rounded-lg border border-border-subtle space-y-2 text-xs">
-              <div className="flex justify-between text-text-secondary">
-                <span>Subtotal (Excl. VAT):</span>
-                <span className="font-mono font-medium text-text-primary">Rs {quotation.subtotal_mur.toLocaleString()}</span>
-              </div>
-              {quotation.tooling_charges_mur > 0 && (
-                <div className="flex justify-between text-text-secondary">
-                  <span>Prepress Tooling / Stereos:</span>
-                  <span className="font-mono font-medium text-text-primary">Rs {quotation.tooling_charges_mur.toLocaleString()}</span>
-                </div>
-              )}
-              <div className="flex justify-between text-text-secondary">
-                <span>VAT ({quotation.tax_rate_percent}%):</span>
-                <span className="font-mono font-medium text-text-primary">Rs {quotation.tax_mur.toLocaleString()}</span>
-              </div>
-              <div className="pt-2 border-t border-border-subtle flex justify-between text-sm font-bold text-text-primary">
-                <span>Total Amount (MUR):</span>
-                <span className="font-mono text-brand-primary">Rs {quotation.total_mur.toLocaleString()}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* 4. AUDIT TRAIL OF BACK-AND-FORTH INTERACTIONS */}
-          <div className="pt-4 border-t border-border-subtle">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted mb-3 flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5" /> Approval & Communication Log
-            </h4>
-            <div className="space-y-2">
-              {quotation.history.map((h, i) => (
-                <div key={i} className="flex items-start text-xs space-x-3 p-2.5 rounded bg-bg-secondary/30">
-                  <div className="w-2 h-2 rounded-full bg-brand-primary mt-1.5" />
-                  <div className="flex-1">
-                    <div className="flex justify-between">
-                      <span className="font-semibold text-text-primary">{h.action}</span>
-                      <span className="text-text-muted text-[11px] font-mono">{h.date}</span>
+          ) : (
+            /* VIEW 2: GOVERNANCE, MARGIN AUDIT & TIMELINE */
+            <div className="p-6 space-y-6">
+              {/* CLIENT CONFIRMATION & AUTO-PRODUCTION SUCCESS BANNER */}
+              {quotation.status === 'accepted' && (
+                <div className="p-4 rounded-xl bg-color-success/10 border border-color-success/30 flex items-center justify-between animate-in fade-in">
+                  <div className="flex items-center space-x-3">
+                    <CheckCircle2 className="w-5 h-5 text-color-success shrink-0" />
+                    <div>
+                      <h4 className="text-sm font-semibold text-color-success">Order Confirmed by Client & Dispatched to Production</h4>
+                      <p className="text-xs text-text-secondary mt-0.5">
+                        {linkedProduction
+                          ? `Manufacturing Job #${linkedProduction.job_reference} has been automatically staged on ${linkedProduction.assigned_team}.`
+                          : 'Production Job automatically queued for plant floor extrusion.'}
+                      </p>
                     </div>
-                    <p className="text-text-secondary text-[11px] mt-0.5">By {h.actor} {h.notes && `— ${h.notes}`}</p>
+                  </div>
+                  {linkedProduction && (
+                    <Badge variant="success">Stage: {linkedProduction.current_stage?.toUpperCase()}</Badge>
+                  )}
+                </div>
+              )}
+
+              {/* ADMIN APPROVAL STATUS BANNER */}
+              {quotation.status === 'pending_approval' && (
+                <div className="p-4 rounded-xl bg-color-warning/10 border border-color-warning/30 flex items-center justify-between animate-in fade-in">
+                  <div className="flex items-center space-x-3">
+                    <ShieldCheck className="w-5 h-5 text-color-warning shrink-0" />
+                    <div>
+                      <h4 className="text-sm font-semibold text-color-warning">Pending Internal Admin Approval</h4>
+                      <p className="text-xs text-text-secondary mt-0.5">
+                        Price calculation and profit margins must be verified and authorized by management before transmitting to the client.
+                      </p>
+                    </div>
+                  </div>
+                  {isAdmin && (
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          onStatusChange?.(quotation.id, 'admin_approved', currentActorName, 'Pricing and gross margin verified and approved by management.');
+                        }}
+                      >
+                        <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> Approve as Admin
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 1. TOP METADATA BAR */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-lg bg-bg-secondary/30 border border-border-subtle text-xs">
+                <div>
+                  <span className="text-text-muted uppercase text-[10px] block">Customer</span>
+                  <button
+                    onClick={() => onNavigateToCustomer?.(quotation.client_id)}
+                    className="font-semibold text-text-primary hover:text-brand-primary hover:underline text-left mt-0.5"
+                  >
+                    {quotation.client_name}
+                  </button>
+                </div>
+                <div>
+                  <span className="text-text-muted uppercase text-[10px] block">Sales Representative</span>
+                  <p className="font-semibold text-text-primary mt-0.5">{quotation.salesperson}</p>
+                </div>
+                <div>
+                  <span className="text-text-muted uppercase text-[10px] block">Creation Date</span>
+                  <p className="font-semibold text-text-primary mt-0.5">{quotation.created_at}</p>
+                </div>
+                <div>
+                  <span className="text-text-muted uppercase text-[10px] block">Validity</span>
+                  <p className="font-semibold text-text-primary mt-0.5">{quotation.valid_until}</p>
+                </div>
+              </div>
+
+              {/* 2. COST BREAKDOWN & COMMERCIAL TOTALS */}
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-6 pt-2">
+                <div className="text-xs text-text-secondary max-w-md space-y-2">
+                  <div className="p-3 bg-bg-secondary/20 rounded border border-border-subtle space-y-1">
+                    <span className="font-semibold text-text-primary text-[11px]">Commercial Governance & Terms:</span>
+                    <p>• Payment Terms: <strong className="text-text-primary">{quotation.payment_terms || 'IB Transfer, Card, Juice or Cheque'}</strong></p>
+                    <p>• Tolerances: <strong className="text-text-primary">±3% variation on quantity ordered</strong></p>
+                    <p>• Bank: <strong className="text-text-primary">STATE BANK OF MAURITIUS LTD (SBM) - 503 0000 134 9609</strong></p>
+                  </div>
+
+                  {quotation.admin_approval && (
+                    <div className="p-2.5 rounded bg-brand-primary/10 border border-brand-primary/20 text-[11px] text-brand-primary space-y-0.5">
+                      <p className="font-semibold flex items-center gap-1">
+                        <ShieldCheck className="w-3.5 h-3.5" /> Admin Margin Authorization:
+                      </p>
+                      <p className="text-text-secondary">
+                        Approved by {quotation.admin_approval.approved_by} on {quotation.admin_approval.approved_at.substring(0, 16).replace('T', ' ')}.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="w-full sm:w-72 bg-bg-secondary/40 p-4 rounded-lg border border-border-subtle space-y-2 text-xs">
+                  <div className="flex justify-between text-text-secondary">
+                    <span>Subtotal (Excl. VAT):</span>
+                    <span className="font-mono font-medium text-text-primary">Rs {quotation.subtotal_mur.toLocaleString()}</span>
+                  </div>
+                  {quotation.tooling_charges_mur > 0 && (
+                    <div className="flex justify-between text-text-secondary">
+                      <span>Prepress Tooling / Stereos:</span>
+                      <span className="font-mono font-medium text-text-primary">Rs {quotation.tooling_charges_mur.toLocaleString()}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-text-secondary">
+                    <span>VAT ({quotation.tax_rate_percent}%):</span>
+                    <span className="font-mono font-medium text-text-primary">Rs {quotation.tax_mur.toLocaleString()}</span>
+                  </div>
+                  <div className="pt-2 border-t border-border-subtle flex justify-between text-sm font-bold text-text-primary">
+                    <span>Total Amount (MUR):</span>
+                    <span className="font-mono text-brand-primary">Rs {quotation.total_mur.toLocaleString()}</span>
                   </div>
                 </div>
-              ))}
+              </div>
+
+              {/* 3. AUDIT TRAIL OF BACK-AND-FORTH INTERACTIONS */}
+              <div className="pt-4 border-t border-border-subtle">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted mb-3 flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5" /> Approval & Communication Log
+                </h4>
+                <div className="space-y-2">
+                  {quotation.history.map((h, i) => (
+                    <div key={i} className="flex items-start text-xs space-x-3 p-2.5 rounded bg-bg-secondary/30">
+                      <div className="w-2 h-2 rounded-full bg-brand-primary mt-1.5" />
+                      <div className="flex-1">
+                        <div className="flex justify-between">
+                          <span className="font-semibold text-text-primary">{h.action}</span>
+                          <span className="text-text-muted text-[11px] font-mono">{h.date}</span>
+                        </div>
+                        <p className="text-text-secondary text-[11px] mt-0.5">By {h.actor} {h.notes && `— ${h.notes}`}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
+          )}
 
         </div>
 
-        {/* MODAL FOOTER ACTIONS (Role-Aware Governance) */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between px-6 py-4 border-t border-border-subtle bg-bg-secondary/40 gap-3">
+        {/* MODAL FOOTER ACTIONS (Role-Aware Governance) - HIDDEN ON PRINT */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between px-6 py-3.5 border-t border-border-subtle bg-bg-secondary/40 gap-3 print:hidden">
           <Button variant="ghost" onClick={onClose}>
             Close
           </Button>
@@ -478,7 +465,7 @@ export function QuotationDetailModal({
             )}
 
             <Button variant="outline" onClick={() => window.print()}>
-              <Printer className="w-4 h-4 mr-1.5" /> Print / PDF
+              <Printer className="w-4 h-4 mr-1.5" /> Print Official Quotation
             </Button>
           </div>
         </div>

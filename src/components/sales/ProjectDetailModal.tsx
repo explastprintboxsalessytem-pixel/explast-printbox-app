@@ -6,6 +6,7 @@ import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { DemoService } from '@/lib/sales/demo-service';
 import { AppUser } from '@/types/demo';
+import { CompanyQuotationDocument } from './CompanyQuotationDocument';
 import {
   X,
   FolderKanban,
@@ -454,6 +455,33 @@ export function ProjectDetailModal({
                         ? '⏳ Awaiting Admin pricing & margin verification.'
                         : 'Quotation active in negotiation.'}
                     </p>
+                  </div>
+
+                  {/* Official Company Document Format Preview */}
+                  <div className="pt-4 border-t border-border-subtle">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-text-muted">
+                        Official Company Quotation Document Preview
+                      </span>
+                      {onOpenQuotation && (
+                        <button
+                          onClick={() => {
+                            onClose();
+                            onOpenQuotation(linkedQuotation.id);
+                          }}
+                          className="text-xs text-brand-primary hover:underline font-semibold flex items-center gap-1"
+                        >
+                          Open in Full View / Print →
+                        </button>
+                      )}
+                    </div>
+                    <div className="bg-zinc-100/70 p-3 sm:p-5 rounded-xl border border-border-subtle flex justify-center">
+                      <CompanyQuotationDocument
+                        quotation={linkedQuotation}
+                        brand={project.brand || 'PrintBox'}
+                        className="scale-[0.92] sm:scale-100 origin-top"
+                      />
+                    </div>
                   </div>
                 </Card>
               ) : (

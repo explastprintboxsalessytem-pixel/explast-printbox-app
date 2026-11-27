@@ -113,6 +113,10 @@ export interface DemoQuotation {
   delivery_terms: string;
   estimated_lead_time_days: number;
   internal_notes?: string;
+  brand?: 'Explast' | 'PrintBox';
+  contact_phone?: string;
+  bank_name?: string;
+  bank_account_number?: string;
   is_demo: true;
   history: {
     date: string;
