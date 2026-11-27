@@ -283,3 +283,38 @@ export interface WeeklySalesFollowUp {
   priority: 'high' | 'medium' | 'low';
   created_at: string;
 }
+
+export type TaskPriority = 'urgent' | 'high' | 'medium' | 'low';
+export type TaskUrgency = 'overdue' | 'due_today' | 'due_soon';
+export type TaskStatus = 'pending' | 'completed' | 'cancelled';
+export type TaskCategory =
+  | 'customer_followup'
+  | 'quote_followup'
+  | 'quote_prep'
+  | 'quote_send'
+  | 'client_contact'
+  | 'project_action'
+  | 'approval_pending'
+  | 'reminder';
+
+export interface SalesTask {
+  id: string; // e.g. TSK-2026-001
+  assigned_to: string; // e.g. 'Alex L.'
+  title: string;
+  description: string;
+  due_date: string; // YYYY-MM-DD
+  urgency: TaskUrgency;
+  priority: TaskPriority;
+  status: TaskStatus;
+  category: TaskCategory;
+  category_label: string;
+  related_client_id?: string;
+  related_client_name?: string;
+  related_project_id?: string;
+  related_project_name?: string;
+  related_quotation_id?: string;
+  related_quotation_number?: string;
+  brand: 'Explast' | 'PrintBox' | 'Both';
+  created_at: string;
+  completed_at?: string;
+}

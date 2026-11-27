@@ -9,6 +9,9 @@ import {
   DemoProductionStage,
   WeeklySalesFollowUp,
   WeeklyFollowUpStatus,
+  SalesTask,
+  TaskStatus,
+  TaskUrgency,
 } from '@/types/demo';
 import {
   DEMO_CUSTOMERS,
@@ -18,6 +21,7 @@ import {
   DEMO_PRODUCTION_JOBS,
   DEMO_ACTIVITIES,
   DEMO_WEEKLY_FOLLOWUPS,
+  DEMO_TASKS,
 } from './demo-data';
 
 const STORAGE_KEYS = {
@@ -28,6 +32,7 @@ const STORAGE_KEYS = {
   PRODUCTION: 'explast_demo_production_v2',
   ACTIVITIES: 'explast_demo_activities_v2',
   FOLLOWUPS: 'explast_demo_followups_v2',
+  TASKS: 'explast_demo_tasks_v2',
   INITIALIZED: 'explast_demo_initialized_v2',
 };
 
@@ -61,6 +66,7 @@ export const DemoService = {
     const existingCustomers = getStore<any[]>(STORAGE_KEYS.CUSTOMERS, []);
     const existingProjects = getStore<any[]>(STORAGE_KEYS.PROJECTS, []);
     const existingFollowups = getStore<any[]>(STORAGE_KEYS.FOLLOWUPS, []);
+    const existingTasks = getStore<any[]>(STORAGE_KEYS.TASKS, []);
     const isStale =
       !isInitialized ||
       force ||
@@ -70,7 +76,9 @@ export const DemoService = {
       existingProjects.length < DEMO_PROJECTS.length ||
       existingProjects.some(p => !p.assigned_salesperson) ||
       !existingFollowups ||
-      existingFollowups.length < DEMO_WEEKLY_FOLLOWUPS.length;
+      existingFollowups.length < DEMO_WEEKLY_FOLLOWUPS.length ||
+      !existingTasks ||
+      existingTasks.length < (DEMO_TASKS ? DEMO_TASKS.length : 0);
     if (isStale) {
       setStore(STORAGE_KEYS.CUSTOMERS, DEMO_CUSTOMERS);
       setStore(STORAGE_KEYS.PROJECTS, DEMO_PROJECTS);
@@ -79,6 +87,7 @@ export const DemoService = {
       setStore(STORAGE_KEYS.PRODUCTION, DEMO_PRODUCTION_JOBS);
       setStore(STORAGE_KEYS.ACTIVITIES, DEMO_ACTIVITIES);
       setStore(STORAGE_KEYS.FOLLOWUPS, DEMO_WEEKLY_FOLLOWUPS);
+      setStore(STORAGE_KEYS.TASKS, DEMO_TASKS);
       setStore(STORAGE_KEYS.INITIALIZED, true);
     }
   },
@@ -386,6 +395,216 @@ export const DemoService = {
     return getStore<DemoActivityEvent[]>(STORAGE_KEYS.ACTIVITIES, DEMO_ACTIVITIES);
   },
 
+  // ==========================================================================
+  // Tasks & Follow-ups Engine (Action-Oriented Daily Sales Organization)
+  // ==========================================================================
+  getTasks(filter?: {
+    assignedTo?: string;
+    brand?: string;
+    status?: TaskStatus | 'all';
+    urgency?: TaskUrgency | 'all';
+  }): SalesTask[] {
+    this.initialize();
+    const rawTasks = getStore<SalesTask[]>(STORAGE_KEYS.TASKS, DEMO_TASKS);
+    const today = '2026-11-27';
+
+    // Dynamically evaluate urgency based on current date
+    const evaluatedTasks: SalesTask[] = rawTasks.map(t => {
+      let evaluatedUrgency: TaskUrgency = t.urgency;
+      if (t.status === 'completed') {
+        evaluatedUrgency = 'due_soon';
+      } else if (t.due_date < today) {
+        evaluatedUrgency = 'overdue';
+      } else if (t.due_date === today) {
+        evaluatedUrgency = 'due_today';
+      } else {
+        evaluatedUrgency = 'due_soon';
+      }
+      return {
+        ...t,
+        urgency: evaluatedUrgency,
+      };
+    });
+
+    let filtered = evaluatedTasks;
+
+    if (filter?.assignedTo && filter.assignedTo !== 'all') {
+      filtered = filtered.filter(t => t.assigned_to === filter.assignedTo);
+    }
+
+    if (filter?.brand && filter.brand !== 'Both' && filter.brand !== 'Global View') {
+      filtered = filtered.filter(t => t.brand === filter.brand || t.brand === 'Both');
+    }
+
+    if (filter?.status && filter.status !== 'all') {
+      filtered = filtered.filter(t => t.status === filter.status);
+    }
+
+    if (filter?.urgency && filter.urgency !== 'all') {
+      filtered = filtered.filter(t => t.urgency === filter.urgency);
+    }
+
+    const urgencyWeight: Record<TaskUrgency, number> = {
+      overdue: 1,
+      due_today: 2,
+      due_soon: 3,
+    };
+
+    return filtered.sort((a, b) => {
+      if (a.status === 'completed' && b.status !== 'completed') return 1;
+      if (a.status !== 'completed' && b.status === 'completed') return -1;
+      const weightA = urgencyWeight[a.urgency] || 4;
+      const weightB = urgencyWeight[b.urgency] || 4;
+      if (weightA !== weightB) return weightA - weightB;
+      return a.due_date.localeCompare(b.due_date);
+    });
+  },
+
+  getTaskById(id: string): SalesTask | undefined {
+    return this.getTasks({ status: 'all' }).find(t => t.id === id);
+  },
+
+  createTask(taskData: Partial<SalesTask>): SalesTask {
+    this.initialize();
+    const existing = getStore<SalesTask[]>(STORAGE_KEYS.TASKS, DEMO_TASKS);
+    const newId = `TSK-2026-${String(existing.length + 1).padStart(3, '0')}`;
+    const today = '2026-11-27';
+    const dueDate = taskData.due_date || today;
+
+    let urgency: TaskUrgency = 'due_soon';
+    if (dueDate < today) urgency = 'overdue';
+    else if (dueDate === today) urgency = 'due_today';
+
+    const newTask: SalesTask = {
+      id: newId,
+      assigned_to: taskData.assigned_to || 'Alex L.',
+      title: taskData.title || 'New Sales Follow-up Task',
+      description: taskData.description || '',
+      due_date: dueDate,
+      urgency,
+      priority: taskData.priority || 'medium',
+      status: 'pending',
+      category: taskData.category || 'customer_followup',
+      category_label: taskData.category_label || 'Customer Follow-up',
+      related_client_id: taskData.related_client_id,
+      related_client_name: taskData.related_client_name,
+      related_project_id: taskData.related_project_id,
+      related_project_name: taskData.related_project_name,
+      related_quotation_id: taskData.related_quotation_id,
+      related_quotation_number: taskData.related_quotation_number,
+      brand: taskData.brand || 'Explast',
+      created_at: new Date().toISOString(),
+    };
+
+    const updated = [newTask, ...existing];
+    setStore(STORAGE_KEYS.TASKS, updated);
+
+    // Activity log
+    const activities = this.getActivities();
+    const act: DemoActivityEvent = {
+      id: `DEMO-ACT-${Date.now()}`,
+      timestamp: 'Just now',
+      event_type: 'request',
+      title: `Task Created: ${newTask.title}`,
+      description: `Assigned to ${newTask.assigned_to} • Due ${newTask.due_date}`,
+      actor: newTask.assigned_to,
+      entity_id: newId,
+      severity: 'info',
+    };
+    setStore(STORAGE_KEYS.ACTIVITIES, [act, ...activities]);
+
+    return newTask;
+  },
+
+  completeTask(id: string): SalesTask | undefined {
+    this.initialize();
+    const existing = getStore<SalesTask[]>(STORAGE_KEYS.TASKS, DEMO_TASKS);
+    let targetTask: SalesTask | undefined;
+
+    const updated = existing.map(t => {
+      if (t.id === id) {
+        targetTask = {
+          ...t,
+          status: 'completed' as TaskStatus,
+          completed_at: new Date().toISOString(),
+        };
+        return targetTask;
+      }
+      return t;
+    });
+
+    if (targetTask) {
+      setStore(STORAGE_KEYS.TASKS, updated);
+      const activities = this.getActivities();
+      const act: DemoActivityEvent = {
+        id: `DEMO-ACT-${Date.now()}`,
+        timestamp: 'Just now',
+        event_type: 'request',
+        title: `Task Completed: ${targetTask.title}`,
+        description: `Marked completed by ${targetTask.assigned_to}`,
+        actor: targetTask.assigned_to,
+        entity_id: id,
+        severity: 'success',
+      };
+      setStore(STORAGE_KEYS.ACTIVITIES, [act, ...activities]);
+    }
+
+    return targetTask;
+  },
+
+  rescheduleTask(id: string, newDueDate: string): SalesTask | undefined {
+    this.initialize();
+    const existing = getStore<SalesTask[]>(STORAGE_KEYS.TASKS, DEMO_TASKS);
+    const today = '2026-11-27';
+    let targetTask: SalesTask | undefined;
+
+    let urgency: TaskUrgency = 'due_soon';
+    if (newDueDate < today) urgency = 'overdue';
+    else if (newDueDate === today) urgency = 'due_today';
+
+    const updated = existing.map(t => {
+      if (t.id === id) {
+        targetTask = {
+          ...t,
+          due_date: newDueDate,
+          urgency,
+          status: 'pending' as TaskStatus,
+        };
+        return targetTask;
+      }
+      return t;
+    });
+
+    if (targetTask) {
+      setStore(STORAGE_KEYS.TASKS, updated);
+      const activities = this.getActivities();
+      const act: DemoActivityEvent = {
+        id: `DEMO-ACT-${Date.now()}`,
+        timestamp: 'Just now',
+        event_type: 'request',
+        title: `Task Rescheduled: ${targetTask.title}`,
+        description: `New deadline set to ${newDueDate} by ${targetTask.assigned_to}`,
+        actor: targetTask.assigned_to,
+        entity_id: id,
+        severity: 'info',
+      };
+      setStore(STORAGE_KEYS.ACTIVITIES, [act, ...activities]);
+    }
+
+    return targetTask;
+  },
+
+  deleteTask(id: string): boolean {
+    this.initialize();
+    const existing = getStore<SalesTask[]>(STORAGE_KEYS.TASKS, DEMO_TASKS);
+    const updated = existing.filter(t => t.id !== id);
+    if (updated.length !== existing.length) {
+      setStore(STORAGE_KEYS.TASKS, updated);
+      return true;
+    }
+    return false;
+  },
+
   // Customer 360 Ecosystem
   getCustomerRelationship(customerId: string) {
     const customer = this.getCustomerById(customerId);
@@ -585,18 +804,32 @@ export const DemoService = {
       'QC & Packaging': Math.max(1, Math.round(totalJobs * 0.05)),
     };
 
-    // 5. Sales Rep Comparison
-    const salesRepsRecord: Record<string, { requests: number; quotes: number; acceptedValue: number; wonCount: number }> = {
-      'Alex L.': { requests: 8, quotes: 10, acceptedValue: 1485000, wonCount: 7 },
-      'Sunil R.': { requests: 6, quotes: 8, acceptedValue: 980000, wonCount: 5 },
-      'Sarah M.': { requests: 5, quotes: 7, acceptedValue: 840000, wonCount: 4 },
+    // 5. Sales Rep Comparison (Comprehensive across all 4 representatives)
+    const repsList = ['Alex L.', 'Sunil R.', 'Sarah M.', 'David T.'];
+    const salesRepsRecord: Record<string, { requests: number; quotes: number; acceptedValue: number; wonCount: number; activeProjects: number }> = {
+      'Alex L.': { requests: 0, quotes: 0, acceptedValue: 0, wonCount: 0, activeProjects: 0 },
+      'Sunil R.': { requests: 0, quotes: 0, acceptedValue: 0, wonCount: 0, activeProjects: 0 },
+      'Sarah M.': { requests: 0, quotes: 0, acceptedValue: 0, wonCount: 0, activeProjects: 0 },
+      'David T.': { requests: 0, quotes: 0, acceptedValue: 0, wonCount: 0, activeProjects: 0 },
     };
+
+    const allProjectsForComparison = this.getProjects();
+    allProjectsForComparison.forEach(p => {
+      const rep = p.assigned_salesperson || p.salesperson || p.client?.assigned_salesperson;
+      if (rep && salesRepsRecord[rep]) {
+        const stage = p.kanban_stage || p.request_status;
+        if (stage !== 'Completed' && stage !== 'Closed') {
+          salesRepsRecord[rep].activeProjects++;
+        }
+        salesRepsRecord[rep].requests++;
+      }
+    });
 
     const allQuotesForComparison = this.getQuotations();
     allQuotesForComparison.forEach(q => {
       const rep = q.salesperson || 'Alex L.';
       if (!salesRepsRecord[rep]) {
-        salesRepsRecord[rep] = { requests: 4, quotes: 0, acceptedValue: 0, wonCount: 0 };
+        salesRepsRecord[rep] = { requests: 0, quotes: 0, acceptedValue: 0, wonCount: 0, activeProjects: 0 };
       }
       salesRepsRecord[rep].quotes++;
       if (q.status === 'accepted') {
@@ -605,13 +838,17 @@ export const DemoService = {
       }
     });
 
-    const salesRepsList = Object.entries(salesRepsRecord).map(([name, repData]) => {
-      const winRate = repData.quotes > 0 ? Math.round((repData.wonCount / repData.quotes) * 100) : 65;
+    const salesRepsList = repsList.map(name => {
+      const repData = salesRepsRecord[name] || { requests: 0, quotes: 0, acceptedValue: 0, wonCount: 0, activeProjects: 0 };
+      const winRate = repData.quotes > 0 ? Math.round((repData.wonCount / repData.quotes) * 100) : 60;
       const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
+      const repQuotes = allQuotesForComparison.filter(q => (q.salesperson || '') === name);
+      const repTotalQuoted = repQuotes.reduce((acc, q) => acc + q.total_mur, 0) || Math.round(repData.acceptedValue * 1.45);
       return {
         name,
         avatar: initials,
-        quotedValue: Math.round(repData.acceptedValue * 1.45),
+        activeProjects: repData.activeProjects || 3,
+        quotedValue: repTotalQuoted,
         acceptedValue: repData.acceptedValue,
         quotesCount: repData.quotes,
         wonCount: repData.wonCount,
@@ -619,7 +856,7 @@ export const DemoService = {
       };
     });
 
-    // 6. Pipeline Workflow Stage Counts for Donut Chart
+    // 6. Pipeline Workflow Stage Counts for Donut Chart & Stage Bars (Strictly Accurate)
     const stageCounts: Record<string, number> = {
       'Discovery & Enquiry': 0,
       'Commercial Quoting': 0,
@@ -637,22 +874,28 @@ export const DemoService = {
       else stageCounts['Discovery & Enquiry']++;
     });
 
+    const activeProjectsCount =
+      stageCounts['Discovery & Enquiry'] +
+      stageCounts['Commercial Quoting'] +
+      stageCounts['Prepress & Artwork'] +
+      stageCounts['Production Order'];
+
     const pipelineStages = [
-      { label: 'Discovery & Enquiry', count: stageCounts['Discovery & Enquiry'] || 4, color: '#119A94', stageKey: 'Discovery' },
-      { label: 'Commercial Quoting', count: stageCounts['Commercial Quoting'] || 5, color: '#C28A35', stageKey: 'Quoting' },
-      { label: 'Prepress & Artwork', count: stageCounts['Prepress & Artwork'] || 3, color: '#6E4A9E', stageKey: 'Design' },
-      { label: 'Production Order', count: stageCounts['Production Order'] || 4, color: '#0F625F', stageKey: 'Production Order' },
-      { label: 'Closed & Completed', count: stageCounts['Closed & Completed'] || 3, color: '#4F8F68', stageKey: 'Completed' },
+      { label: 'Discovery & Enquiry', count: stageCounts['Discovery & Enquiry'], color: '#119A94', stageKey: 'Discovery' },
+      { label: 'Commercial Quoting', count: stageCounts['Commercial Quoting'], color: '#C28A35', stageKey: 'Quoting' },
+      { label: 'Prepress & Artwork', count: stageCounts['Prepress & Artwork'], color: '#6E4A9E', stageKey: 'Design' },
+      { label: 'Production Order', count: stageCounts['Production Order'], color: '#0F625F', stageKey: 'Production Order' },
+      { label: 'Closed & Completed', count: stageCounts['Closed & Completed'], color: '#4F8F68', stageKey: 'Completed' },
     ];
 
-    // 7. Monthly Sales Trend (6-month interactive timeline)
+    // 7. Monthly Sales Trend (6-month comparative timeline for Grouped Bar Chart)
     const monthlySalesTrend = [
-      { label: 'Oct', quotedValue: 1850000, signedRevenue: 1150000, previousPeriod: 1400000 },
-      { label: 'Nov', quotedValue: 2200000, signedRevenue: 1420000, previousPeriod: 1750000 },
-      { label: 'Dec', quotedValue: 2750000, signedRevenue: 1890000, previousPeriod: 2100000 },
-      { label: 'Jan', quotedValue: 3100000, signedRevenue: 2150000, previousPeriod: 2450000 },
-      { label: 'Feb', quotedValue: 3450000, signedRevenue: 2420000, previousPeriod: 2800000 },
-      { label: 'Mar', quotedValue: totalQuotationValue || 3840000, signedRevenue: acceptedQuotationValue || 2650000, previousPeriod: 3150000 },
+      { label: 'Jun', quotedValue: Math.round((totalQuotationValue * 0.65) / 1000) * 1000, signedRevenue: Math.round((acceptedQuotationValue * 0.60) / 1000) * 1000 },
+      { label: 'Jul', quotedValue: Math.round((totalQuotationValue * 0.72) / 1000) * 1000, signedRevenue: Math.round((acceptedQuotationValue * 0.68) / 1000) * 1000 },
+      { label: 'Aug', quotedValue: Math.round((totalQuotationValue * 0.82) / 1000) * 1000, signedRevenue: Math.round((acceptedQuotationValue * 0.75) / 1000) * 1000 },
+      { label: 'Sep', quotedValue: Math.round((totalQuotationValue * 0.88) / 1000) * 1000, signedRevenue: Math.round((acceptedQuotationValue * 0.82) / 1000) * 1000 },
+      { label: 'Oct', quotedValue: Math.round((totalQuotationValue * 0.94) / 1000) * 1000, signedRevenue: Math.round((acceptedQuotationValue * 0.90) / 1000) * 1000 },
+      { label: 'Nov', quotedValue: totalQuotationValue, signedRevenue: acceptedQuotationValue },
     ];
 
     // 8. Conversion Funnel Stages
@@ -703,6 +946,7 @@ export const DemoService = {
         totalRequests,
         totalQuotationsCount,
         totalQuotationValue,
+        activeProjectsCount,
         quotedSparkline: [1850, 2100, 2600, 3100, 3450, Math.round(totalQuotationValue / 1000)],
         quotedVariation: { percent: 12, isPositive: true, comparisonText: `+12% ${comparisonSuffix}` },
         acceptedQuotationValue,
@@ -738,6 +982,13 @@ export const DemoService = {
         completedJobsText: `${completedJobs.length} completed ${period === 'month' ? 'this month' : 'this period'}`,
         jobsByStage,
         jobsByStagePrintbox,
+        workload: {
+          totalInProgress: activeJobs.length,
+          awaitingMaterial: productionJobs.filter(j => j.current_stage === 'awaiting_material' || j.current_stage === 'scheduled').length,
+          inManufacturing: productionJobs.filter(j => ['extrusion', 'printing', 'conversion', 'awaiting_printing'].includes(j.current_stage)).length,
+          awaitingQC: productionJobs.filter(j => j.current_stage === 'quality_control').length,
+          completedThisPeriod: completedJobs.length,
+        },
       },
       monthlySalesTrend,
       pipelineStages,

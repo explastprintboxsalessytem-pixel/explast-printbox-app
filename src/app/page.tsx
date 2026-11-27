@@ -232,6 +232,7 @@ export default function App() {
               onNavigateTab={(tab) => setActiveTab(tab)}
               onOpenClient={(cId) => setSelectedCustomerId(cId)}
               onOpenProject={(proj) => setSelectedProjectForModal(proj)}
+              onOpenQuotation={(q) => setSelectedQuotationForModal(q)}
             />
           )}
 
