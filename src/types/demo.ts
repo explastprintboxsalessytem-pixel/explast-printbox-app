@@ -44,6 +44,14 @@ export const APP_USERS: AppUser[] = [
     email: 'sarah@explast.mu',
   },
   {
+    id: 'usr-david',
+    name: 'David T.',
+    role: 'sales',
+    title: 'Food Packaging Specialist',
+    avatar: 'DT',
+    email: 'david@printbox.mu',
+  },
+  {
     id: 'usr-admin',
     name: 'Administrator',
     role: 'admin',
@@ -242,4 +250,36 @@ export interface DemoCustomerProfile extends Client {
     details: string;
   }[];
   is_demo: true;
+}
+
+export type WeeklyFollowUpStatus =
+  | 'hot_lead'
+  | 'sample_given'
+  | 'quoted'
+  | 'in_negotiation'
+  | 'converted'
+  | 'cold';
+
+export interface WeeklySalesFollowUp {
+  id: string; // e.g. WFU-2026-001
+  salesperson: string; // e.g. 'Alex L.'
+  week_number: number; // e.g. 48
+  week_label: string; // e.g. 'Week 48 (23 Nov - 29 Nov 2026)'
+  visit_date: string; // e.g. '2026-11-27'
+  business_and_visit: string; // 1. Business & visit (e.g. 'Grillicious')
+  contact_and_authority: string; // 2. Contact & buying authority (e.g. 'Sweety / Purchasing Lead (Tel – 54613220)')
+  packaging_required: string; // 3. Packaging required (e.g. 'Food packaging items - printed takeaway boxes')
+  quantity_and_buying_date?: string; // 4. Quantity & buying date (e.g. '2,500 pcs initial, monthly repeats')
+  current_supplier_and_price?: string; // 5. Current supplier & price (e.g. 'N/A - plain stock from distributor')
+  need_and_reason_to_change: string; // 6. Need & reason to change (e.g. 'Will depend on proposed price and custom print')
+  your_proposal: string; // 7. Your proposal. (e.g. 'Best price, better service - proposed Rs 8.25/pc')
+  customer_response?: string; // 8. Customer response (e.g. 'Very interested in high-definition print proof')
+  current_stage_and_evidence: string; // 9. Current stage & evidence (e.g. 'Is using plain packaging')
+  potential_sales_mur?: number; // 10. Potential sales (optional) (e.g. 45000)
+  next_action_and_commitment: string; // 11. Next action & commitment (e.g. 'Gave our printed samples – will check for response soon.')
+  support_and_documents?: string; // 12. Support & documents (e.g. 'Sample pack delivered, Quotation QUO-PB-2026-0010 issued')
+  brand: 'Explast' | 'PrintBox';
+  status: WeeklyFollowUpStatus;
+  priority: 'high' | 'medium' | 'low';
+  created_at: string;
 }

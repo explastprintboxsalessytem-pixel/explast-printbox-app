@@ -20,7 +20,9 @@ import {
   Clock,
   XCircle,
   FileText,
+  Briefcase,
 } from 'lucide-react';
+import { WeeklySalesWorkTracker } from './WeeklySalesWorkTracker';
 
 interface ReportsViewProps {
   brand: string;
@@ -28,6 +30,7 @@ interface ReportsViewProps {
 }
 
 export function ReportsView({ brand: initialBrand, currentUser }: ReportsViewProps) {
+  const [activeSection, setActiveSection] = useState<'weekly_work' | 'analytics'>('weekly_work');
   const [period, setPeriod] = useState<'30d' | '90d' | 'ytd' | 'custom'>('ytd');
   const [salespersonFilter, setSalespersonFilter] = useState<string>('all');
   const [selectedBrand, setSelectedBrand] = useState<string>(initialBrand);
@@ -56,76 +59,131 @@ export function ReportsView({ brand: initialBrand, currentUser }: ReportsViewPro
   return (
     <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300 print:p-0">
       
-      {/* 3.A. REPORTS HEADER & FILTER TOOLBAR */}
-      <PageHeader
-        eyebrow={isAdmin ? 'Executive Analytics & Commercial Intelligence' : `Portfolio Analytics • ${currentUser?.name}`}
-        badgeText={selectedBrand === 'Global View' ? 'Consolidated Multi-Brand' : `${selectedBrand} Operations`}
-        badgeVariant={isAdmin ? 'neutral' : 'brand'}
-        title="Operations & Enterprise Commercial Reports"
-        description="Comprehensive commercial and production performance metrics."
-        actions={
-          <div className="flex flex-wrap items-center gap-2.5 text-xs print:hidden">
-            {/* Brand Filter */}
-            <div className="flex items-center gap-1.5 bg-bg-card border border-border-strong/70 rounded-lg px-2.5 py-1.5 shadow-2xs">
-              <span className="text-text-muted text-[11px] font-medium">Brand:</span>
-              <select
-                value={selectedBrand}
-                onChange={(e) => setSelectedBrand(e.target.value)}
-                className="bg-transparent text-xs text-text-primary font-semibold focus:outline-none cursor-pointer"
-              >
-                <option value="Explast">Explast (Plastics)</option>
-                <option value="PrintBox">PrintBox (Paper)</option>
-                {isAdmin && <option value="Global View">Global View</option>}
-              </select>
-            </div>
-
-            {/* Sales Representative Filter (Admin only) */}
-            {isAdmin && (
-              <div className="flex items-center gap-1.5 bg-bg-card border border-border-strong/70 rounded-lg px-2.5 py-1.5 shadow-2xs">
-                <span className="text-text-muted text-[11px] font-medium">Sales Rep:</span>
-                <select
-                  value={salespersonFilter}
-                  onChange={(e) => setSalespersonFilter(e.target.value)}
-                  className="bg-transparent text-xs text-text-primary font-semibold focus:outline-none cursor-pointer"
-                >
-                  <option value="all">All Representatives</option>
-                  <option value="Alex L.">Alex L.</option>
-                  <option value="Sunil R.">Sunil R.</option>
-                  <option value="Sarah M.">Sarah M.</option>
-                </select>
-              </div>
-            )}
-
-            {/* Period Selector */}
-            <div className="bg-bg-card border border-border-strong/70 rounded-lg p-1 flex shadow-2xs">
-              {(['30d', '90d', 'ytd', 'custom'] as const).map((pKey) => (
-                <button
-                  key={pKey}
-                  type="button"
-                  onClick={() => setPeriod(pKey)}
-                  className={`px-3 py-1 rounded font-medium transition-colors ${
-                    period === pKey
-                      ? 'bg-brand-primary text-white font-semibold shadow-xs'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
-                  }`}
-                >
-                  {pKey === '30d' ? 'Last 30 Days' : pKey === '90d' ? 'Last 90 Days' : pKey === 'ytd' ? 'Year to Date' : 'Custom'}
-                </button>
-              ))}
-            </div>
-
-            {/* Export PDF Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => window.print()}
-              className="bg-bg-card border-border-strong shadow-2xs hover:bg-bg-secondary"
+      {/* REPORTS MODULE SUB-NAVIGATION SWITCHER */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-subtle pb-3 print:hidden">
+        <div className="flex items-center space-x-2 bg-bg-card p-1 rounded-xl border border-border-strong/70 shadow-2xs">
+          <button
+            type="button"
+            onClick={() => setActiveSection('weekly_work')}
+            className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 ${
+              activeSection === 'weekly_work'
+                ? 'bg-brand-primary text-white shadow-xs'
+                : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
+            }`}
+          >
+            <Briefcase className="w-3.5 h-3.5" />
+            Weekly Sales Work & Follow-Ups
+            <span
+              className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                activeSection === 'weekly_work'
+                  ? 'bg-white/20 text-white'
+                  : 'bg-brand-primary/10 text-brand-primary'
+              }`}
             >
-              <Download className="w-3.5 h-3.5 mr-1.5" /> Export PDF
-            </Button>
-          </div>
-        }
-      />
+              Week 48
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveSection('analytics')}
+            className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-2 ${
+              activeSection === 'analytics'
+                ? 'bg-brand-primary text-white shadow-xs'
+                : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
+            }`}
+          >
+            <TrendingUp className="w-3.5 h-3.5" />
+            Commercial & Plant Analytics
+          </button>
+        </div>
+
+        <div className="text-[11px] text-text-muted hidden sm:flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-color-success animate-pulse" />
+          <span>Active Period: <strong>Week 48 (November 2026)</strong></span>
+        </div>
+      </div>
+
+      {/* VIEW 1: WEEKLY SALES WORK TRACKER (NEW 12-POINT FIELD LOG) */}
+      {activeSection === 'weekly_work' ? (
+        <WeeklySalesWorkTracker
+          brand={selectedBrand}
+          currentUser={currentUser}
+        />
+      ) : (
+        /* VIEW 2: EXECUTIVE COMMERCIAL & PRODUCTION ANALYTICS */
+        <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
+          {/* 3.A. REPORTS HEADER & FILTER TOOLBAR */}
+          <PageHeader
+            eyebrow={isAdmin ? 'Executive Analytics & Commercial Intelligence' : `Portfolio Analytics • ${currentUser?.name}`}
+            badgeText={selectedBrand === 'Global View' ? 'Consolidated Multi-Brand' : `${selectedBrand} Operations`}
+            badgeVariant={isAdmin ? 'neutral' : 'brand'}
+            title="Operations & Enterprise Commercial Reports"
+            description="Comprehensive commercial and production performance metrics."
+            actions={
+              <div className="flex flex-wrap items-center gap-2.5 text-xs print:hidden">
+                {/* Brand Filter */}
+                <div className="flex items-center gap-1.5 bg-bg-card border border-border-strong/70 rounded-lg px-2.5 py-1.5 shadow-2xs">
+                  <span className="text-text-muted text-[11px] font-medium">Brand:</span>
+                  <select
+                    value={selectedBrand}
+                    onChange={(e) => setSelectedBrand(e.target.value)}
+                    className="bg-transparent text-xs text-text-primary font-semibold focus:outline-none cursor-pointer"
+                  >
+                    <option value="Explast">Explast (Plastics)</option>
+                    <option value="PrintBox">PrintBox (Paper)</option>
+                    {isAdmin && <option value="Global View">Global View</option>}
+                  </select>
+                </div>
+
+                {/* Sales Representative Filter (Admin only) */}
+                {isAdmin && (
+                  <div className="flex items-center gap-1.5 bg-bg-card border border-border-strong/70 rounded-lg px-2.5 py-1.5 shadow-2xs">
+                    <span className="text-text-muted text-[11px] font-medium">Sales Rep:</span>
+                    <select
+                      value={salespersonFilter}
+                      onChange={(e) => setSalespersonFilter(e.target.value)}
+                      className="bg-transparent text-xs text-text-primary font-semibold focus:outline-none cursor-pointer"
+                    >
+                      <option value="all">All Representatives</option>
+                      <option value="Alex L.">Alex L.</option>
+                      <option value="Sunil R.">Sunil R.</option>
+                      <option value="Sarah M.">Sarah M.</option>
+                      <option value="David T.">David T.</option>
+                    </select>
+                  </div>
+                )}
+
+                {/* Period Selector */}
+                <div className="bg-bg-card border border-border-strong/70 rounded-lg p-1 flex shadow-2xs">
+                  {(['30d', '90d', 'ytd', 'custom'] as const).map((pKey) => (
+                    <button
+                      key={pKey}
+                      type="button"
+                      onClick={() => setPeriod(pKey)}
+                      className={`px-3 py-1 rounded font-medium transition-colors ${
+                        period === pKey
+                          ? 'bg-brand-primary text-white font-semibold shadow-xs'
+                          : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
+                      }`}
+                    >
+                      {pKey === '30d' ? 'Last 30 Days' : pKey === '90d' ? 'Last 90 Days' : pKey === 'ytd' ? 'Year to Date' : 'Custom'}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Export PDF Button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.print()}
+                  className="bg-bg-card border-border-strong shadow-2xs hover:bg-bg-secondary"
+                >
+                  <Download className="w-3.5 h-3.5 mr-1.5" /> Export PDF
+                </Button>
+              </div>
+            }
+          />
 
       {/* 3.B. MAIN KPI CARDS (ROW 1 - 4 CARDS) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -481,6 +539,8 @@ export function ReportsView({ brand: initialBrand, currentUser }: ReportsViewPro
         </div>
       </Card>
 
+        </div>
+      )}
     </div>
   );
 }

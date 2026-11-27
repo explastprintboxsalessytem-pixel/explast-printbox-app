@@ -7,6 +7,8 @@ import {
   DemoQuotationStatus,
   DemoDesignStatus,
   DemoProductionStage,
+  WeeklySalesFollowUp,
+  WeeklyFollowUpStatus,
 } from '@/types/demo';
 import {
   DEMO_CUSTOMERS,
@@ -15,6 +17,7 @@ import {
   DEMO_DESIGN_PROJECTS,
   DEMO_PRODUCTION_JOBS,
   DEMO_ACTIVITIES,
+  DEMO_WEEKLY_FOLLOWUPS,
 } from './demo-data';
 
 const STORAGE_KEYS = {
@@ -24,6 +27,7 @@ const STORAGE_KEYS = {
   DESIGNS: 'explast_demo_designs_v1',
   PRODUCTION: 'explast_demo_production_v1',
   ACTIVITIES: 'explast_demo_activities_v1',
+  FOLLOWUPS: 'explast_demo_followups_v1',
   INITIALIZED: 'explast_demo_initialized_v1',
 };
 
@@ -55,7 +59,12 @@ export const DemoService = {
   initialize(force = false): void {
     const isInitialized = getStore<boolean>(STORAGE_KEYS.INITIALIZED, false);
     const existingCustomers = getStore<any[]>(STORAGE_KEYS.CUSTOMERS, []);
-    const isStale = !existingCustomers || existingCustomers.length < DEMO_CUSTOMERS.length;
+    const existingFollowups = getStore<any[]>(STORAGE_KEYS.FOLLOWUPS, []);
+    const isStale =
+      !existingCustomers ||
+      existingCustomers.length < DEMO_CUSTOMERS.length ||
+      !existingFollowups ||
+      existingFollowups.length < DEMO_WEEKLY_FOLLOWUPS.length;
     if (!isInitialized || force || isStale) {
       setStore(STORAGE_KEYS.CUSTOMERS, DEMO_CUSTOMERS);
       setStore(STORAGE_KEYS.PROJECTS, DEMO_PROJECTS);
@@ -63,6 +72,7 @@ export const DemoService = {
       setStore(STORAGE_KEYS.DESIGNS, DEMO_DESIGN_PROJECTS);
       setStore(STORAGE_KEYS.PRODUCTION, DEMO_PRODUCTION_JOBS);
       setStore(STORAGE_KEYS.ACTIVITIES, DEMO_ACTIVITIES);
+      setStore(STORAGE_KEYS.FOLLOWUPS, DEMO_WEEKLY_FOLLOWUPS);
       setStore(STORAGE_KEYS.INITIALIZED, true);
     }
   },
@@ -730,6 +740,73 @@ export const DemoService = {
       salesReps: salesRepsRecord,
       salesRepsList,
       businessInsights,
+    };
+  },
+
+  // ==========================================================================
+  // Weekly Sales Work & Customer Follow-Up Tracking (12-Point Template Engine)
+  // ==========================================================================
+  getWeeklyFollowUps(): WeeklySalesFollowUp[] {
+    this.initialize();
+    return getStore<WeeklySalesFollowUp[]>(STORAGE_KEYS.FOLLOWUPS, DEMO_WEEKLY_FOLLOWUPS);
+  },
+
+  getWeeklyFollowUpById(id: string): WeeklySalesFollowUp | undefined {
+    return this.getWeeklyFollowUps().find(f => f.id === id);
+  },
+
+  addWeeklyFollowUp(data: Omit<WeeklySalesFollowUp, 'id' | 'created_at'>): WeeklySalesFollowUp {
+    const list = this.getWeeklyFollowUps();
+    const newEntry: WeeklySalesFollowUp = {
+      ...data,
+      id: `WFU-${Date.now()}`,
+      created_at: new Date().toISOString(),
+    };
+    const updated = [newEntry, ...list];
+    setStore(STORAGE_KEYS.FOLLOWUPS, updated);
+    return newEntry;
+  },
+
+  updateWeeklyFollowUpStatus(id: string, status: WeeklyFollowUpStatus): void {
+    const list = this.getWeeklyFollowUps();
+    const updated = list.map(item => (item.id === id ? { ...item, status } : item));
+    setStore(STORAGE_KEYS.FOLLOWUPS, updated);
+  },
+
+  deleteWeeklyFollowUp(id: string): void {
+    const list = this.getWeeklyFollowUps();
+    const updated = list.filter(item => item.id !== id);
+    setStore(STORAGE_KEYS.FOLLOWUPS, updated);
+  },
+
+  getWeeklyWorkSummary(params?: { weekNumber?: number; salesperson?: string; brand?: string }) {
+    let items = this.getWeeklyFollowUps();
+
+    if (params?.weekNumber) {
+      items = items.filter(f => f.week_number === params.weekNumber);
+    }
+    if (params?.salesperson && params.salesperson !== 'all') {
+      items = items.filter(f => f.salesperson === params.salesperson);
+    }
+    if (params?.brand && params.brand !== 'Global View' && params.brand !== 'all') {
+      items = items.filter(f => f.brand === params.brand);
+    }
+
+    const totalVisits = items.length;
+    const samplesDelivered = items.filter(f => f.status === 'sample_given').length;
+    const hotLeads = items.filter(f => f.status === 'hot_lead').length;
+    const quotesIssued = items.filter(f => f.status === 'quoted').length;
+    const converted = items.filter(f => f.status === 'converted').length;
+    const totalPotentialSales = items.reduce((sum, f) => sum + (f.potential_sales_mur || 0), 0);
+
+    return {
+      items,
+      totalVisits,
+      samplesDelivered,
+      hotLeads,
+      quotesIssued,
+      converted,
+      totalPotentialSales,
     };
   },
 };
